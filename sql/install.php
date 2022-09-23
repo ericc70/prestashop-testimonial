@@ -27,6 +27,15 @@ $sql = array();
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'testimonial` (
     `id_testimonial` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(255) NOT NULL ,
+    `active` int(1) default 0,
+    PRIMARY KEY  (`id_testimonial`)
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'testimonial_lang` (
+    `id_testimonial` int(11) NOT NULL,
+    `id_land` int(11) UNSIGNED NOT NULL,
+    `description` text,
     PRIMARY KEY  (`id_testimonial`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
