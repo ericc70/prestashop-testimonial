@@ -1,28 +1,29 @@
 <?php
+
 /**
-* 2007-2022 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2022 PrestaShop SA
-*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+ * 2007-2022 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ *  @author    PrestaShop SA <contact@prestashop.com>
+ *  @copyright 2007-2022 PrestaShop SA
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *  International Registered Trademark & Property of PrestaShop SA
+ */
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -45,8 +46,19 @@ class Testimonial extends Module
          */
         $this->bootstrap = true;
 
-        parent::__construct();
 
+        /*
+        * menu admin section
+        */
+        $this->tabs = array(
+            array('name' => 'Testimonial', 'class_name' => 'AdminParentTestimonial', 'parent' => ''),
+            array('name' => 'Testimonial', 'class_name' => 'AdminTestimonial', 'parent' => 'AdminParentTestimonial')
+
+        );
+        $this->installTab(true);
+
+        parent::__construct();
+       
         $this->displayName = $this->l('testimonial');
         $this->description = $this->l('module de temoignages');
 
@@ -59,19 +71,64 @@ class Testimonial extends Module
      */
     public function install()
     {
-        require _PS_MODULE_DIR_.'testimonial/sql/install.php'; 
+        require _PS_MODULE_DIR_ . 'testimonial/sql/install.php';
 
         return parent::install() &&
+            $this->installTab() &&
             $this->registerHook('header') &&
             $this->registerHook('backOfficeHeader');
     }
 
     public function uninstall()
     {
-        require _PS_MODULE_DIR_.'testimonial/sql/uninstall.php'; 
+        require _PS_MODULE_DIR_ . 'testimonial/sql/uninstall.php';
 
-        return parent::uninstall();
+        return $this->installTab(false) && parent::uninstall();
     }
+
+
+    public function installTab($intall = true)
+    {
+        if ($intall) {
+            $languages = Language::getLanguages();
+            foreach ($this->tabs as $t) {
+                $tab = new Tab();
+                $tab->module = $this->name;
+                $tab->class_name = $t['class_name'];
+                $tab->id_parent = Tab::getIdFromClassName('class_name');
+                foreach ($languages as $language) {
+                    $tab->name[$language['id_lang']] = $t['name'];
+                }
+                try {
+                    $tab->save();
+                } catch (Exception $e) {
+                    echo $e->getMessage();
+                    return false;
+                }
+            }
+
+           return true;
+        } else {
+
+            foreach ($this->tabs as $t) {
+                 $id = Tab::getIdFromClassName('class_name');
+                 if ($id){
+                     $tab = new Tab($id);
+                     $tab->delete();
+                 }
+        
+                }
+
+        return true;
+           
+            
+        }
+
+
+    }
+
+
+
 
     /**
      * Load the configuration form
@@ -87,9 +144,9 @@ class Testimonial extends Module
 
         $this->context->smarty->assign('module_dir', $this->_path);
 
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
+        $output = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configure.tpl');
 
-        return $output.$this->renderForm();
+        return $output . $this->renderForm();
     }
 
     /**
@@ -108,7 +165,7 @@ class Testimonial extends Module
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'submitTestimonialModule';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
-            .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+            . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
 
         $helper->tpl_vars = array(
@@ -128,8 +185,8 @@ class Testimonial extends Module
         return array(
             'form' => array(
                 'legend' => array(
-                'title' => $this->l('Settings'),
-                'icon' => 'icon-cogs',
+                    'title' => $this->l('Settings'),
+                    'icon' => 'icon-cogs',
                 ),
                 'input' => array(
                     array(
@@ -197,13 +254,13 @@ class Testimonial extends Module
     }
 
     /**
-    * Add the CSS & JavaScript files you want to be loaded in the BO.
-    */
+     * Add the CSS & JavaScript files you want to be loaded in the BO.
+     */
     public function hookBackOfficeHeader()
     {
         if (Tools::getValue('module_name') == $this->name) {
-            $this->context->controller->addJS($this->_path.'views/js/back.js');
-            $this->context->controller->addCSS($this->_path.'views/css/back.css');
+            $this->context->controller->addJS($this->_path . 'views/js/back.js');
+            $this->context->controller->addCSS($this->_path . 'views/css/back.css');
         }
     }
 
@@ -212,7 +269,7 @@ class Testimonial extends Module
      */
     public function hookHeader()
     {
-        $this->context->controller->addJS($this->_path.'/views/js/front.js');
-        $this->context->controller->addCSS($this->_path.'/views/css/front.css');
+        $this->context->controller->addJS($this->_path . '/views/js/front.js');
+        $this->context->controller->addCSS($this->_path . '/views/css/front.css');
     }
 }
