@@ -59,7 +59,7 @@ class Testimonial extends Module
      */
     public function install()
     {
-        Configuration::updateValue('TESTIMONIAL_LIVE_MODE', false);
+        require _PS_MODULE_DIR_.'testimonial/sql/install.php'; 
 
         return parent::install() &&
             $this->registerHook('header') &&
@@ -68,7 +68,7 @@ class Testimonial extends Module
 
     public function uninstall()
     {
-        Configuration::deleteByName('TESTIMONIAL_LIVE_MODE');
+        require _PS_MODULE_DIR_.'testimonial/sql/uninstall.php'; 
 
         return parent::uninstall();
     }
